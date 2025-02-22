@@ -33,9 +33,25 @@ const uint I2C_SCL = 15; // DisplayOLED SCL
 #define USB_CONNECTED_VOLTAGE 4.0f  // Consideramos USB conectado acima de 4.0V
 #define NUM_AMOSTRAS 10             // Número de leituras para média móvel
 
+// Definições para as faixas de valores do joystick
+#define JOYSTICK_MIN 1000  // Valor mínimo para considerar movimento
+#define JOYSTICK_MAX 3000  // Valor máximo para considerar movimento
+
+// Definições do Joystick
+const int vRx = 26;          // Pino de leitura do eixo X do joystick (conectado ao ADC)
+const int vRy = 27;          // Pino de leitura do eixo Y do joystick (conectado ao ADC)
+const int ADC_CHANNEL_0 = 0; // Canal ADC para o eixo X do joystick
+const int ADC_CHANNEL_1 = 1; // Canal ADC para o eixo Y do joystick
+const int SW = 22;           // Pino de leitura do botão do joystick
 
 bool alarme_ativo = false; // Estado do alarme
 bool com_internet = true; // Estado do WI-FI
+
+bool matriz_ligada = false;
+int tela_atual = 0; // 0 = Tela padrão (Status e Tensão), 1 = Tela "IP : "
+
+// String para armazenar o endereço IP
+char ip_address_str[16]; // Ex: "192.168.1.1"
 
 // Configurações do Wi-Fi ======================================================================================================================================================
 #define WIFI_SSID "As 3 Marias"  // Nome da rede Wi-Fi
@@ -199,6 +215,33 @@ int getIndex(int x, int y) {
     }
 }
 
+// Função para exibir o peixe na matriz de LEDs
+void exibir_matriz_led() {
+    int peixe[5][5][3] = {
+        // Linha 1
+        {{16, 16, 245}, {0, 0, 0}, {16, 16, 245}, {0, 0, 0}, {16, 16, 245}},
+        // Linha 2
+        {{0, 0, 0}, {16, 16, 245}, {16, 16, 245}, {16, 16, 245}, {16, 16, 245}},
+        // Linha 3
+        {{16, 16, 245}, {16, 16, 245}, {255, 255, 255}, {16, 16, 245}, {16, 16, 245}},
+        // Linha 4
+        {{0, 0, 0}, {16, 16, 245}, {16, 16, 245}, {16, 16, 245}, {128, 0, 128}},
+        // Linha 5
+        {{16, 16, 245}, {16, 16, 245}, {16, 16, 245}, {16, 16, 245}, {0, 0, 0}}
+    };
+    
+
+  // Percorre a matriz e define as cores dos LEDs
+  for (int linha = 0; linha < 5; linha++) {
+      for (int coluna = 0; coluna < 5; coluna++) {
+          int posicao = getIndex(linha, coluna); // Calcula a posição do LED na matriz
+          npSetLED(posicao, peixe[linha][coluna][0], peixe[linha][coluna][1], peixe[linha][coluna][2]);
+      }
+  }
+
+  // Escreve os dados nos LEDs
+  npWrite();
+}
 // Variáveis para controle do PWM ========================================================================================================================================
 uint slice_num_a;  // Slice do PWM para o Buzzer A
 uint channel_a;    // Canal do PWM para o Buzzer A
@@ -226,23 +269,10 @@ void configurar_pwm() {
 
 // Função para emitir o padrão de bipes ===================================================================================================================================
 void emitir_bipes() {
-    // Matriz de leds 5x5
-    int matriz[5][5][3] = {
-        {{0, 0, 0}, {0, 0, 0}, {255, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-        {{0, 0, 0}, {0, 0, 0}, {255, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-        {{255, 0, 0},{255, 0, 0}, {255, 0, 0}, {255, 0, 0}, {255, 0, 0}},
-        {{0, 0, 0}, {0, 0, 0}, {255, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-        {{0, 0, 0}, {0, 0, 0}, {255, 0, 0}, {0, 0, 0}, {0, 0, 0}}
-    };
-    // Desenhando Sprite contido na matriz.c
-    for (int linha = 0; linha < 5; linha++) {
-        for (int coluna = 0; coluna < 5; coluna++) {
-            int posicao = getIndex(linha, coluna);
-            npSetLED(posicao, matriz[coluna][linha][0], matriz[coluna][linha][1], matriz[coluna][linha][2]);
-        }
-    }
+    
 
     // Aciona os leds
+    exibir_matriz_led();
     npWrite();  // Liga o LED MATRIZ       
     gpio_put(LED_PIN, 1);  // Liga o LED SOLO 
 
@@ -267,7 +297,7 @@ void bipes_de_inicializacao() {
     // Aciona os buzzers
     pwm_set_enabled(slice_num_a, true);
     pwm_set_enabled(slice_num_b, true);
-    sleep_ms(2000);  // Duração do beep
+    sleep_ms(1000);  // Duração do beep
 
     gpio_put(LED_PIN, 0);  // Desliga o LED
     // Desliga os buzzers
@@ -318,12 +348,34 @@ float ler_tensao_vsys() {
     float tensao = valor_adc * 3.3f / (1 << 12);
     return tensao * 3.0f;
 }
+// Função de Configuração do Joystick =============================================================================================================================================
+void setup_joystick() {
+    adc_gpio_init(vRx); // Configura o pino VRX (eixo X) para entrada ADC
+    adc_gpio_init(vRy); // Configura o pino VRY (eixo Y) para entrada ADC
+    gpio_init(SW);      // Inicializa o pino do botão
+    gpio_set_dir(SW, GPIO_IN); // Configura o pino do botão como entrada
+    gpio_pull_up(SW);  // Ativa o pull-up no pino do botão
+}
+
+//  Função de Leitura do Joystick
+void joystick_read_axis(uint16_t *eixo_x, uint16_t *eixo_y) {
+    adc_select_input(ADC_CHANNEL_0); // Seleciona o canal ADC para o eixo X
+    sleep_us(2);                     // Pequeno delay para estabilidade
+    *eixo_x = adc_read();            // Lê o valor do eixo X (0-4095)
+    adc_select_input(ADC_CHANNEL_1); // Seleciona o canal ADC para o eixo Y
+    sleep_us(2);                     // Pequeno delay para estabilidade
+    *eixo_y = adc_read();            // Lê o valor do eixo Y (0-4095)
+}
 // ================================== INICIO DA FO MAIN ============================================================================================================================================
 int main() {
+
     stdio_init_all();
+
     adc_init();
     
     adc_gpio_init(VSYS_PIN);
+
+    setup_joystick();  // Inicializa o joystick
 
 // Inicializa matriz de LEDs NeoPixel.
 npInit(LED_PIN_MATRIZ);
@@ -411,7 +463,8 @@ restart:
     } else {
         printf("Conectado ao Wi-Fi!\n");
         uint8_t *ip_address = (uint8_t*)&(cyw43_state.netif[0].ip_addr.addr);
-        printf("Endereço IP %d.%d.%d.%d\n", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
+        snprintf(ip_address_str, sizeof(ip_address_str), "%d.%d.%d.%d", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
+        printf("Endereço IP %s\n", ip_address_str);
         com_internet = true;
     }
      
@@ -433,6 +486,45 @@ restart:
     bipes_de_inicializacao();
 
     while (1) {
+        
+// Leitura do joystick =================================================================================================================================================
+    uint16_t valor_x, valor_y;
+    joystick_read_axis(&valor_x, &valor_y);
+    printf("Joystick - X: %d, Y: %d, Botao: %d\n", valor_x, valor_y, gpio_get(SW));
+
+    // Verifica o movimento do joystick para mudar a tela
+    if (valor_y < JOYSTICK_MIN) { // Joystick movido para cima
+        tela_atual = 0;   // Tela padrão (Status e Tensão)
+    } else if (valor_y > JOYSTICK_MAX) { // Joystick movido para baixo
+        tela_atual = 1;   // Tela "IP Address"
+    } else if (valor_x < JOYSTICK_MIN) { // Joystick movido para a esquerda
+        tela_atual = 2;   // Tela de Temperatura
+    } else if (valor_x > JOYSTICK_MAX) { // Joystick movido para a direita
+        tela_atual = 3;   // Tela de PH
+    }
+
+    // Verifica se o botão do joystick foi pressionado
+    if (gpio_get(SW) == 0) { // Botão pressionado (LOW, pois está com pull-up)
+        sleep_ms(50); // Debounce: espera um pouco para evitar múltiplas detecções
+        if (gpio_get(SW) == 0) { // Confirma se o botão ainda está pressionado
+            matriz_ligada = !matriz_ligada; // Alterna o estado da matriz de LEDs
+            if (matriz_ligada) {
+                exibir_matriz_led(); // Acende a matriz de LEDs
+                npWrite();
+            } else {
+                npClear(); // Apaga a matriz de LEDs
+                npWrite();
+            }
+            while (gpio_get(SW) == 0) {
+                // Espera o botão ser solto para evitar múltiplas alternâncias
+                sleep_ms(10);
+            }
+        }
+    }
+
+
+    
+
 
 // Verifica a tensão VSYS para detectar desconexão do USB ==========================================================================================================================
         float tensao_vsys = ler_tensao_vsys();
@@ -457,28 +549,67 @@ restart:
     char linha3[16];
     char linha4[16]; 
 
-    sprintf(linha1, "  Tensao VSYS ");  
-    sprintf(linha2, "     %.2fV", media_tensao); 
-
     if (com_internet)
     {
 
-        sprintf(linha3, "   STATUS OK");
-        com_internet = true;
+        if (tela_atual == 0) {
 
+            sprintf(linha1, "  Tensao VSYS ");              // Exibe a tensão VSYS e o status do sistema
+            sprintf(linha2, "     %.2f V", media_tensao);   // A tensão é calculada com base na média móvel das leituras do ADC.
+            sprintf(linha3, "   STATUS OK");
+
+        } else if (tela_atual == 1) {
+
+            sprintf(linha1, "   IP Address");           // Exibe o endereço IP da conexão Wi-Fi
+            sprintf(linha2, " ");                      // O endereço IP é obtido dinamicamente quando o Wi-Fi está conectado.
+            sprintf(linha3, "%s", ip_address_str);
+
+        }else if (tela_atual == 2) {
+
+            sprintf(linha1, "  TEMPERATURA");        // Exibe a temperatura do sistema (valores fixos temporários)
+            sprintf(linha2, "    26 graus");         // Nota: Atualmente, os valores são simulados devido à ausência de um sensor de temperatura.
+            sprintf(linha3, "    celsius");          // Quando o sensor estiver disponível, esta parte do código será atualizada para ler os valores reais.
+
+        }else if (tela_atual == 3) {
+
+            sprintf(linha1, "  nivel de pH");       // Exibe o nível de pH (valores fixos temporários)
+            sprintf(linha2, "      7.0 ");            // Nota: Atualmente, os valores são simulados devido à ausência de um sensor de pH.
+            sprintf(linha3, "    alcalino");            // Quando o sensor estiver disponível, esta parte do código será atualizada para ler os valores reais.  
+            
+        }
         
 
     }else{
 
-        sprintf(linha3, "   WiFi ERRO ");
+        if (tela_atual == 0) {
+
+            sprintf(linha1, "  Tensao VSYS ");              // Exibe a tensão VSYS e o status do Wi-Fi
+            sprintf(linha2, "     %.2f V", media_tensao); // A tensão é calculada com base na média móvel das leituras do ADC.
+            sprintf(linha3, "   WiFi ERRO ");            // Se o Wi-Fi estiver desconectado, exibe "WiFi ERRO"
+
+
+        } else if (tela_atual == 1) {
+
+            sprintf(linha1, "   IP Address");    // Exibe o endereço IP da conexão Wi-Fi
+            sprintf(linha2, " ");                // Se o Wi-Fi estiver desconectado, exibe "No Connection".
+            sprintf(linha3, " No Connection");
+
+        }else if (tela_atual == 2) {
+
+            sprintf(linha1, "  TEMPERATURA");        // Exibe a temperatura do sistema (valores fixos temporários)
+            sprintf(linha2, "    26 graus");         // Nota: Atualmente, os valores são simulados devido à ausência de um sensor de temperatura.
+            sprintf(linha3, "    celsius");          // Quando o sensor estiver disponível, esta parte do código será atualizada para ler os valores reais.
+
+        }else if (tela_atual == 3) {
+
+            sprintf(linha1, "  nivel de pH");       // Exibe o nível de pH (valores fixos temporários)
+            sprintf(linha2, "      7.0 ");            // Nota: Atualmente, os valores são simulados devido à ausência de um sensor de pH.
+            sprintf(linha3, "    alcalino");            // Quando o sensor estiver disponível, esta parte do código será atualizada para ler os valores reais. 
+
+        }
 
     }
     
-    
-    
-    
- 
-
 // Limpa a tela antes de exibir o novo texto 
     memset(ssd, 0, sizeof(ssd));  
 
@@ -488,10 +619,7 @@ restart:
     ssd1306_draw_string(ssd, 5, 20, linha3); // Segunda linha 
     ssd1306_draw_string(ssd, 5, 30, linha4); // Segunda linha
 
-
     render_on_display(ssd, &frame_area);  
-
-
 
 // Verifica se o botão A foi pressionado ou a energia caiu para ativar o alarme e atualiza o Status ========================================================================================================================
         if (gpio_get(BUTTON_ALARM_ON) == 0 || alarme_ativo) {
