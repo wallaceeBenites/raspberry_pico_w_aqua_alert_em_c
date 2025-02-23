@@ -55,9 +55,8 @@ int tela_atual = 0;          // Tela atual (0 = Status e Tensão, 1 = IP, 2 = Te
 char ip_address_str[16];     // String para armazenar o endereço IP
 
 // Configurações do Wi-Fi
-#define WIFI_SSID "Nome"  // Nome da rede Wi-Fi
-#define WIFI_PASS "Senha"    // Senha da rede Wi-Fi
-
+#define WIFI_SSID "Nome"  // Substitua pelo nome da sua rede Wi-Fi
+#define WIFI_PASS "Senha"    // Substitua pela senha da sua rede Wi-Fi
 // Buffer para respostas HTTP
 #define HTTP_RESPONSE "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" \
 "<!DOCTYPE html>" \
