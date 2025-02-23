@@ -517,6 +517,10 @@ No futuro, planejo evoluir o site para oferecer uma experiência mais completa e
 
 O AquaAlert funciona tanto com Wi-Fi quanto sem Wi-Fi. A única diferença é que, sem Wi-Fi, o site de controle não estará disponível. No entanto, o equipamento continuará funcionando de maneira manual, emitindo alarmes sonoros e visuais diretamente pelo hardware.
 
+Para ver o AquaAlert em funcionamento, confira o vídeo abaixo:
+<br>
+[![AquaAlert em Funcionamento](https://img.youtube.com/vi/ca81r7wai8M/0.jpg)](https://www.youtube.com/watch?v=ca81r7wai8M)
+
 
 # 🤝 Contribuição e Considerações Finais
 
