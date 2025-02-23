@@ -328,7 +328,8 @@ char ip_address_str[16];     // String para armazenar o endereço IP
 
 A **BitDogLab** é um kit de desenvolvimento para prototipagem rápida, projetado para facilitar a criação de projetos com o Raspberry Pi Pico W. Ela já vem montada e pronta para uso, sem a necessidade de alterações físicas, e inclui diversos componentes integrados, como display OLED, matriz de LEDs, buzzers, botões e joystick. Abaixo está uma imagem da placa e a disposição dos componentes:
 
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/bitdoglabPNG2.png" alt="BitDogLab" width="500"> <img src="../raspberry_pico_w_aqua_alert_em_c/images/bitdoglabPNG3.png" alt="BitDogLab" width="433">
+<img src="images/bitdoglabPNG2.png" alt="BitDogLab" width="500"> 
+<img src="images/bitdoglabPNG3.png" alt="BitDogLab" width="433">
 
 ### Componentes da BitDogLab utilizados no projeto:
 - **Raspberry Pi Pico W**: Conectado diretamente à BitDogLab.
@@ -361,7 +362,7 @@ Para quem nunca utilizou a **BitDogLab** recomendo o tutorial do Professor Jivag
 
 2. **Compile e coloque para rodar na BitDogLab**:
 
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/imagemcopilaerode.png" alt="BitDogLab" width="500">
+<img src="images/imagemcopilaerode.png" alt="BitDogLab" width="500">
 
 ## 🐠🌊 Como utilizar em seu aquário 
 
@@ -398,7 +399,7 @@ AGUARDE
 
 - Assim que o equipamento inicializar, o LED Solo (na cor azul) acenderá, seguido de um bip de 1 segundo.
 
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/OLED_INICIANDO_EQUIPAMENTO.png" alt="BitDogLab" width="350">
+<img src="images/OLED_INICIANDO_EQUIPAMENTO.png" alt="BitDogLab" width="350">
 
 #### Passo 4: Verificação do Status
 
@@ -416,7 +417,8 @@ O valor `X.XX` representa a tensão que o equipamento está recebendo, seja da b
 Tensao VSYS: X.XX V
 WiFi ERRO
 ```
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/OLED_status_OK.png" alt="BitDogLab" width="350"> <img src="../raspberry_pico_w_aqua_alert_em_c/images/OLED_WIFI_ERRO.png" alt="BitDogLab" width="350">
+<img src="images/OLED_status_OK.png" alt="BitDogLab" width="350">
+ <img src="images/OLED_WIFI_ERRO.png" alt="BitDogLab" width="350">
 
 ## Passo 5: Navegação no Display
 
@@ -445,13 +447,13 @@ Utilizando o joystick, o usuário pode alternar entre as telas do display. São 
  - Exibe o nível de pH da água (valores fixos temporários).
  - *(Nota: Assim como a temperatura, esta funcionalidade será implementada no futuro.)*
 
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/OLED_ok.png" alt="BitDogLab" width="350">
+<img src="images/OLED_ok.png" alt="BitDogLab" width="350">
 <br>
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/OLED_ip_funcionando.png" alt="BitDogLab" width="320">
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/OLED_IP_ERRO.png" alt="BitDogLab" width="300">
+<img src="images/OLED_ip_funcionando.png" alt="BitDogLab" width="320">
+<img src="images/OLED_IP_ERRO.png" alt="BitDogLab" width="300">
 <br>
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/OLED_PH.png" alt="BitDogLab" width="307">
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/OLED_TEMPERATURA.png" alt="BitDogLab" width="350">
+<img src="images/OLED_PH.png" alt="BitDogLab" width="307">
+<img src="images/OLED_TEMPERATURA.png" alt="BitDogLab" width="350">
 
 ## Passo 6: Funcionamento do Alarme
 
@@ -476,7 +478,7 @@ Alarme: Ligado
 - **Manual:** Pressione o Botão A no equipamento.
 - **Site:** Acesse o site do equipamento e clique em "Ligar Alarme".
 
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/AquaAlertFUNCIONANDO.png" alt="BitDogLab" width="350">
+<img src="images/AquaAlertFUNCIONANDO.png" alt="BitDogLab" width="350">
 
 ## Passo 7: Acesso ao Site de Controle
 
@@ -503,11 +505,11 @@ No futuro, planejo evoluir o site para oferecer uma experiência mais completa e
 
 
 
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/SITE_telainteira.png" alt="SITE_ALARME" width="900">
+<img src="images/SITE_telainteira.png" alt="SITE_ALARME" width="900">
 
 <br>
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/SITE_status_LIGADO.png" alt="SITE_ALARME" width="350">
-<img src="../raspberry_pico_w_aqua_alert_em_c/images/SITE_status_DESLIGADO.png" alt="SITE_ALARME" width="369">
+<img src="images/SITE_status_LIGADO.png" alt="SITE_ALARME" width="350">
+<img src="images/SITE_status_DESLIGADO.png" alt="SITE_ALARME" width="369">
 
 
 
