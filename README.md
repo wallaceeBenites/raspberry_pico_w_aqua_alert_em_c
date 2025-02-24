@@ -524,7 +524,7 @@ Para ver o AquaAlert em funcionamento, confira o vídeo abaixo:
 
 # 🤝 Contribuição e Considerações Finais
 
-No futuro, planejo implementar:
+No futuro, planejo implementar: 
 
 - Sensores de temperatura e pH reais.
 - Interface gráfica mais amigável para configuração do Wi-Fi.
